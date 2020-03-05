@@ -1,0 +1,1 @@
+[[202002261813 ROOT of MMM (mini mental model)]]

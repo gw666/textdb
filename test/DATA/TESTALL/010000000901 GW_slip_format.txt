@@ -1,0 +1,26 @@
+(5/1/19) Every slip should start with the following contents (the numbers are line numbers, not a part of the actual file)
+
+
+-----
+1.
+2.
+3. <source:~PUT CURSOR HERE~>
+4. parent links:~PUT CURSOR HERE~
+-----
+
+Remember that you can create the **link for the current slip** and copy it to the Clipboard by pressing Cmd-Opt-C. When you place the cursor as indicated by '~PUT CURSOR HERE~' (which is not part of the file) and do a Paste operation, you will get the lines correctly formatted. Example:
+
+-----
+<source:[[123456789012]]>
+parent links:[[123456789012]] [[098765432109]]
+-----
+
+You can write a Python program to go through all the slips and add child-to-parent links, where needed, on the 'parent links:' line.
+
+for each slip in MTB (my thinking box)
+    source = the slip's ID
+    for each child-link in source
+        go to child slip
+        if the source is in the 'parent links' line, do nothing
+        if it is not, add the source to that line
+        
