@@ -24,6 +24,22 @@
 ; *******************************************************
 
 
+; *******************************************************
+; *                                                     *
+; * Decoding parameter names:                           *
+; *                                                     *
+; * --allobjs: all the File objects in a directory      *
+; *    (plus one File object for the dir itself)        *
+; * --dir-path: pathname to dir holding all the txt     *
+; *    files comprising the textdb                      *
+; * --fileobjs: File objects representing files         *
+; * --fname: a string representing a file name          *
+; * --smap: abbreviation of 'slip-map;                  *
+; * --strings-s: a seq of (usually) filename strings    *
+; * --txtfile: any file ending in '.txt' or 'md'        *
+; *                                                     *
+; *******************************************************
+
 
 
 ; ******************************************
@@ -52,7 +68,7 @@
 
 (defn fileobjs->strings-s  ; was 'names-s'
     "Returns the .getName property of a sequence of files, as seq"
-    [file-s]
+    [fileobjs-s]
 
   ; gets java.io.File objects for a given path, including directories
   ; and items in subdirectories (also Apple ".DS_Store" files)
@@ -61,14 +77,14 @@
   ; at this point, we stop working with File objects, begin
   ; working with STRINGS that represent these File objects
 
-    (map #(.getName %) file-s)
+    (map #(.getName %) fileobjs-s)
 )
 
 
-(defn txtfile-strs-only-s   ; was 'only-txt-s'
+(defn txtfile-strs-only-s   ; was 'only-txtstrings-s'
   "filters out all strings that do not end with either '.txt' or '.md'"
-  [txt-s]
-  (filter #(or (str/ends-with? % ".txt") (str/ends-with? % ".md")) txt-s)
+  [fname-s]
+  (filter #(or (str/ends-with? % ".txt") (str/ends-with? % ".md")) fname-s)
 )
 
 ; ******************************************
@@ -107,7 +123,8 @@
 ; *                                           *
 ; *********************************************
 (defn slip-map   ; aka 'smap'
-  "creates map w/ key=id, value=<contents of file>"
+  "all the data of one slip, as a single map,
+   key = id, value = [fname contents-of-slip]"
   [dir-path fname]
   ; --------------------------------------- 
   (let [id     (fname-id fname)
