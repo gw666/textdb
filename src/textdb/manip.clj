@@ -1,7 +1,6 @@
 (ns textdb.manip
   (:require [clojure.string :as str]
-            [clojure.pprint :as p]
-            [clojure.java.shell :as shell :only sh]
+;            [clojure.java.shell :as shell :only sh]
   )
   (:gen-class)
 )
@@ -39,7 +38,6 @@
 ; * --txtfile: any file ending in '.txt' or 'md'        *
 ; *                                                     *
 ; *******************************************************
-
 
 
 ; ******************************************
@@ -131,22 +129,22 @@
           ;;line 0 = id; line 1-N = the file's contents
         text   (slurp (str dir-path fname))
        ]
-    (hash-map :id id, :fname-text (vector fname text)) 
+    (hash-map :id id, :fname fname, :text text) 
   )
 )
 
 (defn smap-fname
-  ""
+  "get filename from slip-map"
   [slip-map]
   ; --------------------------------------- 
-  (first (:fname-text (first slip-map)))
+  (:fname slip-map)
 )
 
 (defn smap-text
-  ""
+  "get file text from slip-map"
   [slip-map]
   ; --------------------------------------- 
-  (second (:fname-text (first slip-map)))
+  (:text slip-map)
 )
 
 ; *********************************************
@@ -175,3 +173,52 @@
   [val]
   (not (or (nil? val) (false? val)))
 )
+
+; ===== being tested!
+
+(defn export-to-file
+  ; may be wrong approach
+  "appends fname, contents to export-fname; if export-fname
+   does not exist, it is created"
+  [export-fname slip-map]
+  
+  (let [slip-fname   (smap-fname slip-map)
+        slip-text    (smap-text  slip-map)
+       ]
+       (spit export-fname (str slip-fname "\n-----\n\n") :append true)
+       (spit export-fname (str slip-text
+                           "\n--------------------------------------------\n\n\n"
+                           )
+                           :append true
+       )
+  )
+)
+
+
+; ===== end
+
+
+
+
+
+; ===== to build a database using the TEST3 directory =====
+
+  (def currtexts-prefix
+    "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/")
+    
+  (def currtexts (str currtexts-prefix "TEST3" "/"))
+  
+  (def slips-s (text-fnames-s currtexts))
+  ; this is a seq of textfile name strings)
+  
+  (def mydb (slips-db currtexts slips-s))
+  
+  (def oneslip (find-by-id mydb "201909101111"))
+  
+  (def twoslip (find-by-id mydb "201910211245"))
+  
+  (export-to-file "foo.md" oneslip)
+  (export-to-file "foo.md" twoslip)
+
+; ===== end =====
+
