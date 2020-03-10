@@ -79,19 +79,28 @@
     (map #(.getName %) fileobjs-s)
 )
 
-(defn txtfile-strs-only-s   ; was 'only-txtstrings-s'
+(defn txtfile-strs-only-s
   "filters out all strings that do not end with either '.txt' or '.md'"
   [fname-s]
   (filter #(or (s/ends-with? % ".txt") (s/ends-with? % ".md")) fname-s)
 )
 
+(defn all-fnames-s
+  "returns seq of all fnames in dir"
+  [dir-path]
+    (-> 
+    (dir->allobjs-s dir-path)
+    (allobjs->fileobjs-s)
+    (fileobjs->strings-s)
+    )
+)
 
 ; ******************************************
 ; *                                        *
 ; * NOTE: operates on a directory of files *
 ; *                                        *
 ; ******************************************
-(defn text-fnames-s  ; was 'fname-s'
+#_(defn text-fnames-s  ; was 'fname-s'
   "returns seq of all text files in dir"
   [dir-path]
       (-> 
@@ -102,6 +111,13 @@
       )
 )
 
+(defn text-fnames-s
+  "returns seq of all text files in dir"
+  [dir-path]
+      (let [all-fnames (all-fnames-s dir-path)]
+        (txtfile-strs-only-s all-fnames)
+      )
+)
 
 (defn fname-id
   "derives slip's id from its filename"
@@ -249,15 +265,6 @@
 
 ; ===== to build a database using the TEST3 directory =====
 
-  (defn text-all-fnames-s  ; was 'fname-s'
-    "returns seq of all text files in dir"
-    [dir-path]
-        (-> 
-        (dir->allobjs-s dir-path)
-        (allobjs->fileobjs-s)
-        (fileobjs->strings-s)
-        )
-  )
   
 
   (def currtexts-prefix
