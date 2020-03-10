@@ -1,6 +1,7 @@
 (ns textdb.manip
-  (:require [clojure.string :as str]
-;            [clojure.java.shell :as shell :only sh]
+  (:require [clojure.string :only [join split trim triml trimr ends-with?]]
+;           [clojure.java.shell :as shell :only sh]
+            
   )
   (:gen-class)
 )
@@ -79,11 +80,6 @@
 )
 
 
-(defn txtfile-strs-only-s   ; was 'only-txtstrings-s'
-  "filters out all strings that do not end with either '.txt' or '.md'"
-  [fname-s]
-  (filter #(or (str/ends-with? % ".txt") (str/ends-with? % ".md")) fname-s)
-)
 
 ; ******************************************
 ; *                                        *
@@ -154,7 +150,7 @@
 ; *********************************************
 (defn slips-db
   "creates a seq containing one map for each slip in the specified directory"
-  ; create maps of {key=id, value=[fname-id, slip-contents]}
+  ; create maps of {:id=id, :fname=fname, :text=slip-contents}
   [dir-path fname-seq]
   ; --------------------------------------- 
   (map (partial slip-map dir-path) fname-seq)
@@ -195,6 +191,51 @@
 )
 
 
+(defn pour
+  ;may be wrong approach
+  "creates new file, based on parameters; always appends;
+   does not depend on 'require, 'refer, 'use, elsewhere
+   in code"
+  [dir-path fname text-str]
+  (let [full-fname (str dir-path fname)]
+    (spit full-fname text-str :append true)
+  )
+)
+
+
+(defn parent-path
+  "return complete path to dir-path's parent (assumes
+   that dir-path ends with a '/')"
+  [dir-path]
+  ; example: "/a/b/c/d" returns "/a/b/c/"
+  (let [results (re-find #"^(.*)/.*/$" dir-path)]
+    ; append "/" to make it easy to append filename
+    ; and have it be a valid absolute path
+    (str (nth results 1) "/")
+  )
+)
+
+
+(defn smap-string
+  "creates a formatted string for the specified slip-map"
+  [before-str between-str after-str slip-map]
+  (str before-str (smap-fname slip-map) between-str (trimr (smap-text slip-map)) after-str)
+)
+
+
+(defn text-db-report
+  "creates a title/contents report for all slip-maps in the text-db"
+  [a-text-db before-str between-str after-str]
+  
+  (let [partial-fcn (partial smap-string before-str between-str after-str)
+        single-reports-s (map partial-fcn a-text-db)]
+    ; force lazy seq to be realized as a single string
+    (apply str single-reports-s)  
+  )
+)
+
+; (map (partial slip-string before-str between-str after-str ) mydb)
+
 ; ===== end
 
 
@@ -203,22 +244,49 @@
 
 ; ===== to build a database using the TEST3 directory =====
 
+  (defn text-all-fnames-s  ; was 'fname-s'
+    "returns seq of all text files in dir"
+    [dir-path]
+        (-> 
+        (dir->allobjs-s dir-path)
+        (allobjs->fileobjs-s)
+        (fileobjs->strings-s)
+        )
+  )
+  
+
   (def currtexts-prefix
     "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/")
     
   (def currtexts (str currtexts-prefix "TEST3" "/"))
   
-  (def slips-s (text-fnames-s currtexts))
-  ; this is a seq of textfile name strings)
+  ; this is a seq of textfile name strings
+  (def slip-fnames-s (text-fnames-s currtexts))
   
-  (def mydb (slips-db currtexts slips-s))
+  (def mydb (slips-db currtexts slip-fnames-s))
   
   (def oneslip (find-by-id mydb "201909101111"))
   
   (def twoslip (find-by-id mydb "201910211245"))
   
-  (export-to-file "foo.md" oneslip)
-  (export-to-file "foo.md" twoslip)
+ ; (export-to-file "foo.md" oneslip)
+ ; (export-to-file "foo.md" twoslip)
+
+(def before-str "\n================================\n")
+(def between-str "\n--------------------------------\n")
+(def after-str   "\n================================\n\n")
+
+(comment
+; to aid in debugging smap-string
+(def before-str "BEFORE\n")
+(def between-str "\nBETWEEN\n")
+(def after-str   "\nAFTER\n\n\n")
+)
+
+  
+  (def junkpath "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/junk/")
+  (def jfname "junk2.md")
+  (pour junkpath jfname "woah\n\n")
 
 ; ===== end =====
 
