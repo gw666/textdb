@@ -1,5 +1,5 @@
 (ns textdb.manip
-  (:require [clojure.string :only [join split trim triml trimr ends-with?]]
+  (:require [clojure.string :as s]
 ;           [clojure.java.shell :as shell :only sh]
             
   )
@@ -79,6 +79,11 @@
     (map #(.getName %) fileobjs-s)
 )
 
+(defn txtfile-strs-only-s   ; was 'only-txtstrings-s'
+  "filters out all strings that do not end with either '.txt' or '.md'"
+  [fname-s]
+  (filter #(or (s/ends-with? % ".txt") (s/ends-with? % ".md")) fname-s)
+)
 
 
 ; ******************************************
@@ -219,7 +224,7 @@
 (defn smap-string
   "creates a formatted string for the specified slip-map"
   [before-str between-str after-str slip-map]
-  (str before-str (smap-fname slip-map) between-str (trimr (smap-text slip-map)) after-str)
+  (str before-str (smap-fname slip-map) between-str (s/trimr (smap-text slip-map)) after-str)
 )
 
 
