@@ -1,1 +1,0 @@
-found in https://aeon.co/essays/why-simone-weil-is-the-patron-saint-of-anomalous-persons #bba01

@@ -1,1 +1,0 @@
-Gottman says this in <<source:[[700000000006]]>>. Good QUO pg 22

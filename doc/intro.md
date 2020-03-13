@@ -1,5 +1,7 @@
 # Introduction to textDB
 
+(*way* out of date, but the defined terms are still good)
+
 Notes on understanding 'dircontents' project (name based on manipulating a folder--directory--of text files)
 
 Use: to query, manipulate, and output combinations of entries (each text file being called a 'slip' as in 'slip of paper') in a directory that contains the records of what I call a 'thinking box' (my name for a zettelkasten).

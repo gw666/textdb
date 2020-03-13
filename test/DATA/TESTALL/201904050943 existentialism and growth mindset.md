@@ -1,6 +1,0 @@
-"Q: What do you think are the core tenets of existentialism?
-
-"Actually, I think there’s a straightforward answer to that, and I think it’s the answer that both Simone de Beauvoir and Jean-Paul Sartre gave in 1945, when they gave the word ‘existentialism’ its definition. It had only been coined shortly before and it was a media buzzword that meant just about anything. They gave it a definition and they defined it in terms of their own philosophy. It is the theory that existence precedes essence: the individual person doesn’t have a set, fixed personality, but instead develops a character depending on the projects they pursue and the social environment in which they pursue them. That’s the existential element of existentialism. It’s also the ethical theory that one ought to respect the structure of human existence, which means that one ought to value human freedom above everything else."
-
-philosopher Jonathan Webber
-https://fivebooks.com/best-books/existentialist-classics-jonathan-webber/ (there is more of interest on this webpage)

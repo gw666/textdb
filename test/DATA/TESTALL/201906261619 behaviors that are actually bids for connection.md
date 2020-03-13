@@ -1,1 +1,0 @@
-[[201906261617 bad behavior can be bid for connection]]

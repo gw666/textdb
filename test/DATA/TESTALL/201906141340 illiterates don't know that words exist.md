@@ -1,1 +1,0 @@
-If you can't read and know nothing about reading, you don't know that speech is made of words

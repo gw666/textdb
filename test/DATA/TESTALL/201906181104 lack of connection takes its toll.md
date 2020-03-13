@@ -1,1 +1,0 @@
-<<source: [[190000000006 _The Relationship Cure_]], pg 23>>

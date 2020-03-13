@@ -1,1 +1,0 @@
-Couples who often use humor, silliness, whimsey as part of their relationship are increasing their connection to each other.

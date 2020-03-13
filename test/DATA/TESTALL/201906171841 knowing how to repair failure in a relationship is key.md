@@ -1,1 +1,0 @@
-<<source:[[700000000006]]>>   no one can make perfect connections to another person all the time. For this reason, learning how to repair or recover from the damaged connection (or mistake) is key.

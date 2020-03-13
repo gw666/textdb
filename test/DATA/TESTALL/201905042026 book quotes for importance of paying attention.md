@@ -1,1 +1,0 @@
-See _Improv Wisdom_ (Patricia Ryan Madson), Ch. 6 'pay attention'

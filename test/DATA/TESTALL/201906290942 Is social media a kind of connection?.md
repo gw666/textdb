@@ -1,1 +1,0 @@
-if it is, it's a really thin kind; more likely, it's just the *illusion* of connection
