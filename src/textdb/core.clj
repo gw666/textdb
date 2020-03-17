@@ -16,8 +16,8 @@
     
   (def currtexts (str currtexts-prefix "TEST3" "/"))
   
-  (def slips-s (manip/text-fnames-s currtexts))
-  ; this is a seq of textfile name strings)
+  (def slips-s (manip/txtfile-strs-only-s currtexts))
+  ; this is a seq of textfile name strings
   
   (def slips-db1 (manip/slips-db currtexts slips-s))
 

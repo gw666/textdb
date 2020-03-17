@@ -17,7 +17,7 @@ What is the role of the ego in relationship problems? How do you recognize that 
 === end file ===
 
 
-Terms used in the project and its source code
+## Terminology
 
 * slip: (aka 'zettel'; see https://zettelkasten.de/) a text file containing one unit of thought
 
@@ -47,7 +47,7 @@ Terms used in the project and its source code
   EXAMPLE: Here is the map representing the slip-id=201910211245 (see above). The map is in the form of
   
     {:id <string-value>,
-    :fname-text [<string containing filename>, (<string containing contents of the slip>]}
+    :fname-text "<string containing filename><string containing contents of the slip>"}
   
 ================== the resulting map =====================
 
@@ -59,6 +59,25 @@ Terms used in the project and its source code
 * slips-db: This is the main data structure of this project. It is 
   a sequence of maps, each map representing all the data that belongs    one slip; see 'slip-map', above.
   
+
+## Conventions
+
+* The contents of a thinking-box directory should be nothing but text files, ".md" preferred, otherwise ".txt"
+
+* The text of a slip always contains the filename of the file that contains it.
+
+* File pathnames *always* end with '/'. This is so you can say
+     <filename with fullp path> = <directory that file is in, including '/'> + <filename>
+
+
+# Workflow 1: for modifying a thinking-box (sorta) in place
+
+1. Make a copy of the thinking box (change space to underline): "GW-thinking-box_copy"
+2. Mark the original with date and time: "GW-thinking-box--ARCHIVE_3/13/20_3:50pm"
+3. Do any manipulations **on the copy**
+4. If all goes well, make the copy the original--i.e., remove "_copy from directory's name
+5. **KEEP** all your archives
+
 
 ## SUMMARY ##
 
