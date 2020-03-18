@@ -21,7 +21,7 @@
 ; * we want to manipulate                               *
 ; *                                                     *
 ; * -- dir->allobjs-s: returns all File objects         *
-; * -- textfile-fnames-s: returns all text filenames    *
+; * -- txtfile-fnames-s: returns all text filenames     *
 ; * -- slip-map: returns a given text file's contents   *
 ; *      as a map                                       *
 ; * -- slips-db: returns a seq of slip-map entries, one *
@@ -45,13 +45,9 @@
 ; *                                                     *
 ; *******************************************************
 
-; ******************************************
-; *                                        *
-; * NOTE: operates on a directory of files *
-; *                                        *
-; ******************************************
 (defn dir->allobjs-s
-  "returns a seq of File objects for the given directory"
+  "returns a seq of *all* File objects for the given directory
+   (including those in subdirectories)"
   [dir-path]
   
   (file-seq                     ; 2. Return the directory's contents
@@ -80,6 +76,7 @@
     (map #(.getName %) fileobjs-s)
 )
 
+
 (defn all-fnames-s
   "returns seq of all fnames (as strings) in dir"
   [dir-path]
@@ -89,24 +86,13 @@
     (fileobjs->strings-s)
     )
 )
-(defn txtfile-strs-only-s
+(defn txtfile-fnames-s
   "filters out all strings that do not end with either '.txt' or '.md'"
   [dir-path]
   (filter #(or (ends-with? % ".txt") (ends-with? % ".md")) (all-fnames-s dir-path))
 )
 
-; ******************************************
-; *                                        *
-; * NOTE: operates on a directory of files *
-; *                                        *
-; ******************************************
-(defn textfile-fnames-s
-  "returns seq of all text files in dir"
-  [dir-path]
-      (let [all-fnames (all-fnames-s dir-path)]
-        (txtfile-strs-only-s all-fnames)
-      )
-)
+
 (defn fname-id
   "derives slip's id from its filename"
   [fname]
@@ -294,7 +280,7 @@
   "use modification-fcn on all slips to create seq of [fname modified-text]"
   [orig-tbox-p modification-fcn]
   
-  (let [all-slips-fname-s (textfile-fnames-s orig-tbox-p)
+  (let [all-slips-fname-s (txtfile-fnames-s orig-tbox-p)
         orig-textdb (slips-db orig-tbox-p all-slips-fname-s)
        ]
     ; result of map is a lazy seq of [filename text] for each slip-map
@@ -320,8 +306,8 @@
     "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/")
 (def currtexts (str currtexts-prefix "TEST3" "/"))
 
-; this is a seq of textfile name strings
-(def slip-fnames-s (txtfile-strs-only-s currtexts))
+; this is a seq of txtfile name strings
+(def slip-fnames-s (txtfile-fnames-s currtexts))
   
 (def mydb (slips-db currtexts slip-fnames-s))
 (def oneslip (find-by-id mydb "201909101111"))
