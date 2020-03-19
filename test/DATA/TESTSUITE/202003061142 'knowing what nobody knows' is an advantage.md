@@ -4,3 +4,5 @@ Did he see that as a market opportunity? A sign he was more creative than them? 
 
 Did he use this thought to persevere?
 
+
+
