@@ -1,9 +1,10 @@
 (ns textdb.manip
-  (:require [clojure.string :refer [ends-with? split trimr join]]
-;           [clojure.java.shell :as shell :only sh]
+  (:require
+      [clojure.string :refer [ends-with? includes? split trimr join]]
   )
   (:gen-class)
 )
+
 ; *******************************************************
 ; *                                                     *
 ; * NOTE: This project is about making reports from     *
@@ -21,7 +22,7 @@
 ; * we want to manipulate                               *
 ; *                                                     *
 ; * -- dir->allobjs-s: returns all File objects         *
-; * -- txtfile-fnames-s: returns all text filenames     *
+; * -- txtfile-fname-s: returns all text filenames     *
 ; * -- slip-map: returns a given text file's contents   *
 ; *      as a map                                       *
 ; * -- slips-db: returns a seq of slip-map entries, one *
@@ -76,9 +77,8 @@
     (map #(.getName %) fileobjs-s)
 )
 
-
-(defn all-fnames-s
-  "returns seq of all fnames (as strings) in dir"
+(defn all-fname-s
+  "returns seq of all fnames in dir (as strings)"
   [dir-path]
     (-> 
     (dir->allobjs-s dir-path)
@@ -86,10 +86,11 @@
     (fileobjs->strings-s)
     )
 )
-(defn txtfile-fnames-s
-  "filters out all strings that do not end with either '.txt' or '.md'"
+
+(defn txtfile-fname-s
+  "filters out all strings that do not end with either .txt or .md"
   [dir-path]
-  (filter #(or (ends-with? % ".txt") (ends-with? % ".md")) (all-fnames-s dir-path))
+  (filter #(or (ends-with? % ".txt") (ends-with? % ".md")) (all-fname-s dir-path))
 )
 
 
@@ -118,10 +119,14 @@
   (let [id     (fname-id fname)
           ;;line 0 = id; line 1-N = the file's contents
         text   (slurp (str dir-path fname))
+        text-out (if (empty? text) "\n" text)
        ]
-    (hash-map :id id, :fname fname, :text text) 
+;    (println "id/text: " id "[" text-out "]")
+;    (println "Is text empty?: " (empty? text) "\n")
+    (hash-map :id id, :fname fname, :text text-out) 
   )
 )
+
 (defn smap-fname
   "get filename from slip-map"
   [slip-map]
@@ -135,14 +140,9 @@
   (:text slip-map)
 )
 
-; *********************************************
-; *                                           *
-; * NOTE: requires dir-path to work correctly *
-; *                                           *
-; *********************************************
 (defn slips-db
   "creates a seq containing one map for each slip in the specified directory"
-  ; create maps of {:id=id, :fname=fname, :text=slip-contents}
+  ; create maps of {:id =id, :fname =fname, :text =contents of slip
   [dir-path fname-seq]
   ; --------------------------------------- 
   (map (partial slip-map dir-path) fname-seq)
@@ -150,9 +150,16 @@
 (defn find-by-id
   "given an id value, return the map of the slip that has that value;
    returns nil if nothing found"
-  [slips-db id-value]
+  [slips-db id]
 ; NOTE: returns map, not *seq* containing the map
-  (first (filter #(= id-value (% :id)) slips-db))
+  (first (filter #(= id (% :id)) slips-db))
+)
+(defn find-by-fname
+  "given an id value, return the map of the slip that has that value;
+   returns nil if nothing found"
+  [slips-db fname]
+; NOTE: returns map, not *seq* containing the map
+  (first (filter #(= fname (% :fname)) slips-db))
 )
 (defn truthy
   "if val=nil or false, returns false; else returns true"
@@ -201,7 +208,6 @@
   [before-str between-str after-str slip-map]
   (str before-str (smap-fname slip-map) between-str (trimr (smap-text slip-map)) after-str)
 )
-; TEMP-- I cut out duplicated code here --
 
 (defn text-db-report
   "creates a title/contents report for all slip-maps in the text-db"
@@ -219,7 +225,8 @@
     (= (fname-id str1) (fname-id str2))
 )
 
-(defn chop-text
+
+#_(defn chop-text
   "split text into vector of <first line> <rest of text>"
   [text-str]
   
@@ -230,10 +237,39 @@
     (vector first-ln rest-txt)
   )
 )
+
+
+(defn chop-text
+  "split text into vector of <first line> <rest of text>"
+  [text-str]
+  
+  ; NOTE: regexes will both return nil unless test-str contains
+  ;       at least one "\n"; if there is none, this fcn 
+  ;       appends a "\n" to the input string
+  
+  (let [first-ln (second (re-find #"^(.*?)\n" text-str))
+        rest-text (second (re-find #"(?s)^.*?\n(.*)$" text-str))
+        text-out (if (includes? rest-text "\n")
+                         rest-text
+                         (str rest-text "\n")
+                 )
+        
+       ]
+    (vector first-ln text-out)
+  )
+)
+(defn test-CR-regex  ; temporarily of use
+  [text-str]
+  (let [first-ln (second (re-find #"^(.*?)\n" text-str))
+        rest-text (second (re-find #"(?s)^.*?\n(.*)$" text-str))
+       ]
+  (println "text-str  -->" text-str "<--")
+  (println "rest-text -->" rest-text "<--")  
+  )
+)
+
 (defn add-fname-to-slip-text
-  "ensures that the body of text always begins w/ the current fname;
-   used to munge existing slip-maps to ensure that all slips' text
-   begin with the slip's *current* filename"
+  "ensures that the body of text always begins w/ the current fname"
   [fname slip-text]
   
   (let [chopped-text (chop-text slip-text)
@@ -246,83 +282,168 @@
     )
   )
 )
-; (second (re-find #"^(.*?)\n" text1)) --finds first line of file
-; (second (re-find #"(?s)^.*?\n(.*)$" text1)) --finds rest of file
-
-; ===== functions being tested =====
 
 (defn update-slip-map-v
-  "creates [fname text] of updated slip, adding fname as needed to the text"
+  "creates [fname text] from slip-map, adding fname as needed to the text"
   [slip-map]
   
   (let [fname (slip-map :fname)
         slip-text (slip-map :text)
+        text-out (if (includes? slip-text "\n")
+                   slip-text
+                   (str slip-text "\n"))
        ]
     ; the function could be factored out to enable arbitrary changes
     ; to the slip text
-    (vector fname (add-fname-to-slip-text fname slip-text))  
+    (vector fname (add-fname-to-slip-text fname text-out))  
   )  
 )
-
-; ============== DEBUGGING NOTE ===================
-
-; add-fname-to-slip-text fails with "201910211240 your brain connects millions of ideas, becomes your worldview.txt", which is the only file where the filename is **already the first line of the file**. This slip has exactly one line of text, which is somehow dropped (see below).
-
-; The output of this function on this file is:
-
-; ["201910211240 your brain connects millions of ideas, becomes your worldview.txt" "201910211240 your brain connects millions of ideas, becomes your worldview.txt\n"]
-
-; note that the second item (the text) is the filename + "\n"...and nothing else. The "\n" should be followed by line 2 of the file. Somehow, add-fname-to-slip-text is not following the True branch of the if statement. I can't find where the error is.
-
-; =================================================
+(defn usmv-test ;debugging only
+  [mytext]
+  
+  (let [fname (slip-map :fname)
+        slip-text (slip-map :text)
+        text-out (if (includes? slip-text "\n")
+                   slip-text
+                   (str slip-text "\n"))
+       ]
+  (println "slip-text  -->" slip-text "<--")
+  (println "slip-text type  -->" (type slip-text) "<--")
+  (println "text-out -->" text-out "<--")  
+  (println "text-out type -->" (type text-out) "<--")  
+  )
+)
 
 (defn munge-thinking-box
   "use modification-fcn on all slips to create seq of [fname modified-text]"
   [orig-tbox-p modification-fcn]
   
-  (let [all-slips-fname-s (txtfile-fnames-s orig-tbox-p)
+  (let [all-slips-fname-s (txtfile-fname-s orig-tbox-p)
         orig-textdb (slips-db orig-tbox-p all-slips-fname-s)
        ]
+       
+;    (println "fnames\n" all-slips-fname-s "\n\n")
+;    (println "orig-textdb\n" orig-textdb "\n\n")
     ; result of map is a lazy seq of [filename text] for each slip-map
+    ; modification-fcn outputs [fname newtext] for each slip-map in orig-textdb
     (map modification-fcn orig-textdb)
   )
 )
 
-(defn spit-slip-v
-  "Given [fname text] of slip, make file in directory dir-path"
-  [dir-path slip-v]
-  (let [slip-fname (nth slip-v 0)
-        slip-text  (nth slip-v 1)
+(defn spit-fname-text-pair
+  "Given [fname text] of one slip, reconstitute the file in directory dir-path"
+  [dir-path fname-text-pair]
+  (let [slip-fname (nth fname-text-pair 0)
+        slip-text  (nth fname-text-pair 1)
         full-fname (str dir-path slip-fname "/")
        ]
     (spit full-fname slip-text)
   )  
 )
 
+(defn spit-new-textdb
+  "Create, in dest-dir, one slip text-file for each [fname text] pair in fname-text-pair-s"
+  [dest-dir fname-text-pair-s]
+  
+  (map #(spit-fname-text-pair dest-dir %1) fname-text-pair-s)
+  
+  
+  
+  
+  
+  
+)
+; -------------------------------------------
+; begin testing code, using GW-thinking-box
+; -------------------------------------------
+(def textdb-source-dir "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/")
 
-; ===== to build a database using the TEST3 directory =====
+(def textdb-dest-dir "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/textdb-NEW/")
 
-(def currtexts-prefix
-    "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/")
-(def currtexts (str currtexts-prefix "TEST3" "/"))
+; 116 records--correct
+(def textdb-fnames (txtfile-fname-s "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/"))
+
+; ditto
+(def origfulldb (slips-db textdb-source-dir textdb-fnames))
+
+; 57 records; incorrect; note: # is almost half of true record count
+(def mfulldb (munge-thinking-box textdb-source-dir update-slip-map-v))
+
+(spit-new-textdb textdb-dest-dir mfulldb)
+
+;  =====================================================================================
+;  =====================================================================================
+; -------------------------------------------
+; doing munge of munded text (above), using DATA/textdb-NEW2
+; -------------------------------------------
+
+; **********************************************
+; WARNING: this modifies AFTST to determine whether the munging of an
+; already munged textb does not introduce any destructive;
+; CHECK the resulting textdb, looking for malformed slip files
+;
+; WHEN DONE, restore the original version to the REPL
+; **********************************************
+(defn add-fname-to-slip-text
+  "adds a dummy line to the twice-munged textdb"
+  [fname slip-text]
+  
+  (str "=====>> T w I c E d-M u N g E d  T e X t <<=====" "\n" slip-text)
+)
+
+(def textdb-source-dir "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/textdb-NEW/")
+
+(def textdb-dest-dir "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/textdb-NEW2/")
+
+(def textdb-fnames (txtfile-fname-s "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/"))
+
+(def origfulldb (slips-db textdb-source-dir textdb-fnames))
+
+(def mfulldb (munge-thinking-box textdb-source-dir update-slip-map-v))
+
+(spit-new-textdb textdb-dest-dir mfulldb)
+
+; ------------------- end testing code ------------------------
+;  =====================================================================================
+;  =====================================================================================
+
+
+; ===== to build a database using the TESTSUITE directory =====
+
+(def source-path-ts "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/TESTSUITE/")
+
+(def dest-path-ts "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/TESTSUITE-NEW/")
 
 ; this is a seq of txtfile name strings
-(def slip-fnames-s (txtfile-fnames-s currtexts))
+(def slip-fnames-s (txtfile-fname-s source-path-ts))
   
-(def mydb (slips-db currtexts slip-fnames-s))
-(def oneslip (find-by-id mydb "201909101111"))
-(def twoslip (find-by-id mydb "201910211245"))
-(def countex {:id "202003061127" :fname "202003061127 curiosity and trust (modified for testing).md"   :text "202003061127 curiosity and trust.md\nBrian Glazer says that in a work situation, asking others a lot of questions builds trust, and this fosters teamwork. Once that's established, he says, he can pull back on asking questions and begin to lead."})
-(def slipfname1 (oneslip :fname))
-(def sliptext1 (oneslip :text))
-(def slipfname2 (twoslip :fname))
-(def sliptext2 (twoslip :text))
-(def choppedtext (chop-text sliptext1))
-(def line1 (nth choppedtext 0))
-(def resttext (nth choppedtext 1))
+(def mydb2 (slips-db source-path-ts slip-fnames-s))
 
-; (export-to-file "foo.md" oneslip)
-; (export-to-file "foo.md" twoslip)
+; creates a seq of [fname modified-text] pairs
+(def my-fname-text-pairs-ts (munge-thinking-box source-path-ts update-slip-map-v))
+
+; creates a textdb that is the munged version of mydb
+(spit-new-textdb dest-path-ts my-fname-text-pairs-ts)
+
+
+
+
+; ===== to build a database using the master thinking-box directory =====
+
+(def source-path-ts "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/")
+
+(def dest-path-ts "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/textdb-NEW/")
+
+; this is a seq of txtfile name strings
+(def slip-fnames-s (txtfile-fname-s source-path-ts))
+  
+(def mydb (slips-db source-path-ts slip-fnames-s))
+
+; creates a seq of [fname modified-text] pairs
+(def my-fname-text-pairs-ts (munge-thinking-box source-path-ts update-slip-map-v))
+
+; creates a textdb that is the munged version of mydb
+(spit-new-textdb dest-path-ts my-fname-text-pairs-ts)
 
 ; ===== 
 
@@ -341,10 +462,6 @@
 (def junkpath "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/junk/")
 (def jfname "junk2.md")
 (pour junkpath jfname "woah\n\n")
-
-(def source-path "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/TEST3easy/")
-
-(def dest-path "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/TEST3easy--NEW/")
 
 
 
