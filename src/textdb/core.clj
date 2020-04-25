@@ -9,12 +9,12 @@
   
 (defn -main []
 
-  (println "hell")
+  (println "hello")
   
   (def currtexts-prefix
     "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/")
     
-  (def currtexts (str currtexts-prefix "TEST3" "/"))
+  (def currtexts (str currtexts-prefix "TESTSUITE" "/"))
   
   (def slips-s (manip/txtfile-fname-s currtexts))
   ; this is a seq of textfile name strings
@@ -23,16 +23,16 @@
 
   
   (println "\n---testing highest functions")
-  (println (manip/slip-map currtexts "201910211240 your brain connects millions of ideas, becomes your worldview.txt"))
+  (println (manip/slip-map currtexts "202003061142 'knowing what nobody knows' is an advantage.md"))
   (println "\n\n")
   
   (comment
-  (println "--doing a Unix 'ls'")
-  (println (exec/sh "pwd"))
-  (println (exec/sh "ls"))
+  ;(println "--doing a Unix 'ls'")
+  ;(println (exec/sh "pwd"))
+  ;(println (exec/sh "ls"))
   )
 
   (println "found using find-by-id")
-  (println (manip/find-by-id slips-db1 "201909101111"))
+  (println (manip/find-by-id slips-db1 "202003141105"))
 )
 
