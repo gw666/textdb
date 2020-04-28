@@ -1,6 +1,7 @@
 (ns textdb.manip
   (:require
-      [clojure.string :refer [ends-with? includes? split trimr join]]
+      [clojure.string :refer [ends-with? includes? split trimr]]
+      [clojure.java.io :only [file]]
   )
   (:gen-class)
 )
@@ -50,18 +51,16 @@
   "returns a seq of *all* File objects for the given directory
    (including those in subdirectories)"
   [dir-path]
-  
-  (file-seq                     ; 2. Return the directory's contents
+  (file-seq                         ; 2. Return the directory's contents
     (clojure.java.io/file dir-path) ; 1. Get the fileobject of the directory
-  )
-)
+  ))
+
 (defn allobjs->fileobjs-s  ; was 'only-files'
     "IN: seq of File objects
      OUT: filtered seq of only those File objects that are
           files (File objs of directories removed)"
   [fileobj-s]
-  (filter #(.isFile %) fileobj-s)
-)
+  (filter #(.isFile %) fileobj-s))
 
 (defn fileobjs->strings-s  ; was 'names-s'
     "Returns the .getName property of a sequence of files, as seq"
@@ -215,14 +214,12 @@
   (let [partial-fcn (partial smap-string before-str between-str after-str)
         single-reports-s (map partial-fcn a-text-db)]
     ; force lazy seq to be realized as a single string
-    (apply str single-reports-s)  
-  )
-)
+    (apply str single-reports-s)))
+
 (defn same-ids?
-    "returns true iff two strings begin with same slip id"
-    [str1 str2]
-    (= (fname-id str1) (fname-id str2))
-)
+  "returns true iff two strings begin with same slip id"
+  [str1 str2]
+  (= (fname-id str1) (fname-id str2)))
 
 
 (defn chop-text
@@ -237,18 +234,12 @@
         rest-text (second (re-find #"(?s)^.*?\n(.*)$" text-str))
         text-out (if (includes? rest-text "\n")
                          rest-text
-                         (str rest-text "\n")
-                 )
-        
-       ]
-    (vector first-ln text-out)
-  )
-)
+                         (str rest-text "\n"))]
+    (vector first-ln text-out)))
 
 (defn test-CR-regex  ; temporarily of use
   [text-str]
-  (let [first-ln (second (re-find #"^(.*?)\n" text-str))
-        rest-text (second (re-find #"(?s)^.*?\n(.*)$" text-str))
+  (let [rest-text (second (re-find #"(?s)^.*?\n(.*)$" text-str))
        ]
   (println "text-str  -->" text-str "<--")
   (println "rest-text -->" rest-text "<--")  
@@ -286,8 +277,8 @@
   )  
 )
 
-(comment
-(defn usmv-test ;debugging only
+
+#_(defn usmv-test ;debugging only
   [mytext slip-map]
   
   (let [fname (slip-map :fname)
@@ -300,23 +291,19 @@
   (println "slip-text type  -->" (type slip-text) "<--")
   (println "text-out -->" text-out "<--")  
   (println "text-out type -->" (type text-out) "<--")  
-  )
-)
-) ;end comment
+  ))
 
 (defn munge-thinking-box
   "use modification-fcn on all slips to create seq of [fname modified-text]"
   [orig-tbox-p modification-fcn]
   
-  (let [all-slips-fname-s(txtfile-fname-s orig-tbox-p)
-        orig-textdb (slips-db orig-tbox-p)
-       ]
+  (let [orig-textdb (slips-db orig-tbox-p)]
        
 ;    (println "fnames\n" all-slips-fname-s "\n\n")
 ;    (println "orig-textdb\n" orig-textdb "\n\n")
     ; result of map is a lazy seq of [filename text] for each slip-map
     ; modification-fcn outputs [fname newtext] for each slip-map in orig-textdb
-    (map modification-fcn orig-textdb)
+    (mapv modification-fcn orig-textdb)
   )
 )
 
@@ -331,12 +318,6 @@
   )  
 )
 
-(defn spit-new-textdb-OLD
-  "Create, in dest-dir, one slip text-file for each [fname text] pair in fname-text-pair-s"
-  [dest-dir fname-text-pair-s]
-  
-  (map #(spit-fname-text-pair dest-dir %1) fname-text-pair-s))
-  
 (defn spit-new-textdb
    "Create, in dest-dir, one slip text-file for each [fname text] pair in fname-text-pair-s"
    [dest-dir fname-text-pair-s]
@@ -345,8 +326,8 @@
 
  ; ----------- code setup
 
-(def srcpath "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/")
-(def mydb (slips-db srcpath))  
+(def srcp "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/")
+(def mydb (slips-db srcp))  
   
 (defn fname-in-slip-text?
   "Is the text file's name = to the first line of its contents?"
@@ -366,12 +347,11 @@
 
 (def srcpath "/Users/gr/Dropbox/THINKING-BOXES/GW-thinking-box/")
 (def destpath "/Users/gr/Dropbox/THINKING-BOXES/new/")
+
 (defn munge-db
-  "munge the textdb, as given by srcpath and destpath"
-  [srcpath]
-  (let [slip-fnames-s (txtfile-fname-s srcpath)
-        mydb (slips-db srcpath)
-        my-fname-text-pairs-ts (munge-thinking-box srcpath update-slip-map-v)]
+  "munge the textdb, as given by srcpath and destpath, re-creating the text db in the destpath directory (which should be empty)"
+  [srcpath destpath]
+  (let [my-fname-text-pairs-ts (munge-thinking-box srcpath update-slip-map-v)]
     (spit-new-textdb destpath my-fname-text-pairs-ts)))
  
 ; NEXT STEPS:
@@ -385,23 +365,5 @@
 ; tool to confirm that munge-db has produced the desired result
 ; we're assuming that the munged data is still in the "new" directory
 
-
-
-
-; ===== to build a database using the TESTSUITE directory =====
-
-(comment
-
-  (def srcpath "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/TESTSUITE/")
-
-  (def destpath "/Users/gr/tech/clojurestuff/cljprojects/textdb/test/DATA/TESTSUITE-NEW/")
-
-; this is a seq of txtfile name strings
-  (def slip-fnames-s (txtfile-fname-s srcpath))
-
-  (def mydb (slips-db srcpath))
-
-; creates a seq of [fname modified-text] pairs
-  (def my-fname-text-pairs-ts (munge-thinking-box srcpath update-slip-map-v))) ;end COMMENT
 
 ; ===== end =====
