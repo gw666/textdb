@@ -226,7 +226,7 @@
   "split text into vector of <first line> <rest of text>"
   [text-str]
   
-  ; NOTE: regexes will both return nil unless test-str contains
+  ; NOTE: fcn returns error if test-str is empty...
   ;       at least one "\n"; if there is none, this fcn 
   ;       appends a "\n" to the input string
   
@@ -354,7 +354,7 @@
   (let [my-fname-text-pairs-ts (munge-thinking-box srcpath update-slip-map-v)]
     (spit-new-textdb destpath my-fname-text-pairs-ts)))
  
-; NEXT STEPS:
+; MANUAL STEPS TO PERFORM AFTER RUNNING MUNGE-DB:
 ; diff the two directories to confirm correctness
 ; copy 'media' folder to 'new'
 ; rename 'new' as 'GW-thinking-box'
@@ -364,6 +364,30 @@
 
 ; tool to confirm that munge-db has produced the desired result
 ; we're assuming that the munged data is still in the "new" directory
-
-
 ; ===== end =====
+; 
+
+
+(defn fname-begins-slip-text?
+    "Returns true if the same, name of file if file's line 0 is not filename"
+    [smap]
+    (let [atext   (smap :text)
+          fname   (smap :fname)
+          line0   (get (chop-text atext) 0)]
+      (if (= fname line0) true fname)))
+
+; NOTE: must confirm munge-db works before continuing
+(defn textdb-errors
+  "checks for first-line errors in textdb contents"
+  [db-path]
+  (let [my-db   (slips-db db-path)]
+    (mapv fname-begins-slip-text? my-db)))
+
+; START HERE FOR TEXTDB-ERRORS
+; chop-text has execn errors if no text or [text but no CR]
+; save original defn for chop-text
+; modify, streamline it
+; see if munge-db still works okay
+; create tests for chop-text edge cases
+; resume work on textdb-errors
+

@@ -10,3 +10,11 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+.DS_Store
+.idea/
+OLD/
+src/textdb/manip (original).clj
+src/textdb/results 4:7:20.txt
+test/DATA/TESTSUITE-NEW/
+f failed tests/
+textdb.iml

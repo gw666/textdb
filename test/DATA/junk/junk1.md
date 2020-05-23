@@ -1,2 +1,0 @@
-wakka
-woo-namor
